@@ -19,8 +19,10 @@ type DecadeCollection = {
   artworks: Artwork[];
 };
 
-const API_URL =
-  'https://api.artic.edu/api/v1/artworks?fields=id,title,artist_display,date_display,date_start,image_id&page=1&limit=1000';
+const API_URL = 'https://api.artic.edu/api/v1/artworks';
+const ARTWORK_FIELDS = 'id,title,artist_display,date_display,date_start,image_id';
+const PAGE_LIMIT = 100;
+const TOTAL_PAGES = 10;
 
 const imageUrl = (imageId?: string) =>
   imageId
@@ -33,6 +35,21 @@ function formatArtist(artistDisplay?: string) {
   }
 
   return artistDisplay.split('\n')[0]?.trim() ?? 'Unknown artist';
+}
+
+async function fetchArtworkPage(page: number) {
+  const url = new URL(API_URL);
+  url.searchParams.set('fields', ARTWORK_FIELDS);
+  url.searchParams.set('page', String(page));
+  url.searchParams.set('limit', String(PAGE_LIMIT));
+
+  const response = await fetch(url.toString());
+  if (!response.ok) {
+    throw new Error(`Unable to load artwork data (HTTP ${response.status})`);
+  }
+
+  const json = (await response.json()) as ArtworkApiResponse;
+  return json.data;
 }
 
 function App() {
@@ -48,13 +65,19 @@ function App() {
         setIsLoading(true);
         setError(null);
 
-        const response = await fetch(API_URL);
-        if (!response.ok) {
-          throw new Error(`Unable to load artwork data (HTTP ${response.status})`);
-        }
+        const pageNumbers = Array.from({ length: TOTAL_PAGES }, (_, index) => index + 1);
+        const pages = await Promise.all(pageNumbers.map((page) => fetchArtworkPage(page)));
 
-        const json = (await response.json()) as ArtworkApiResponse;
-        const filtered = json.data.filter((item) => item.date_start && item.title);
+        const merged = pages.flat();
+        const deduped = new Map<number, Artwork>();
+
+        merged.forEach((item) => {
+          if (item.id && !deduped.has(item.id)) {
+            deduped.set(item.id, item);
+          }
+        });
+
+        const filtered = [...deduped.values()].filter((item) => item.date_start && item.title);
         setArtworks(filtered);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Unexpected error loading data');
