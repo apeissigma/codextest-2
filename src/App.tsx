@@ -20,7 +20,7 @@ type DecadeCollection = {
 };
 
 const API_URL =
-  'https://api.artic.edu/api/v1/artworks?fields=id,title,artist_display,date_display,date_start,image_id&page=1&limit=100';
+  'https://api.artic.edu/api/v1/artworks?fields=id,title,artist_display,date_display,date_start,image_id&page=1&limit=1000';
 
 const imageUrl = (imageId?: string) =>
   imageId
@@ -38,6 +38,7 @@ function formatArtist(artistDisplay?: string) {
 function App() {
   const [artworks, setArtworks] = useState<Artwork[]>([]);
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const [selectedArtwork, setSelectedArtwork] = useState<Artwork | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -80,12 +81,13 @@ function App() {
     });
 
     return [...buckets.entries()]
-      .sort(([a], [b]) => a - b)
       .map(([startYear, items]) => ({
         label: `${startYear}s`,
         startYear,
         artworks: items.sort((a, b) => (a.date_start ?? 0) - (b.date_start ?? 0))
-      }));
+      }))
+      .filter((collection) => collection.artworks.length >= 20)
+      .sort((a, b) => a.startYear - b.startYear);
   }, [artworks]);
 
   useEffect(() => {
@@ -136,18 +138,51 @@ function App() {
           </div>
 
           <div className="cards-grid">
-            {activeDecade.artworks.slice(0, 12).map((artwork) => (
-              <article key={artwork.id} className="art-card">
+            {activeDecade.artworks.slice(0, 20).map((artwork) => (
+              <button
+                key={artwork.id}
+                type="button"
+                className="art-card"
+                onClick={() => setSelectedArtwork(artwork)}
+                aria-label={`Open details for ${artwork.title}`}
+              >
                 <img src={imageUrl(artwork.image_id)} alt={artwork.title} loading="lazy" />
                 <div className="card-meta">
                   <h3>{artwork.title}</h3>
                   <p>{formatArtist(artwork.artist_display)}</p>
                   <p className="muted">{artwork.date_display || artwork.date_start}</p>
                 </div>
-              </article>
+              </button>
             ))}
           </div>
         </section>
+      )}
+
+      {selectedArtwork && (
+        <div className="modal-backdrop" onClick={() => setSelectedArtwork(null)}>
+          <section
+            className="art-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-label={`Artwork details for ${selectedArtwork.title}`}
+            onClick={(event) => event.stopPropagation()}
+          >
+            <button
+              type="button"
+              className="close-button"
+              onClick={() => setSelectedArtwork(null)}
+              aria-label="Close artwork details"
+            >
+              ×
+            </button>
+            <img src={imageUrl(selectedArtwork.image_id)} alt={selectedArtwork.title} />
+            <div className="modal-meta">
+              <h2>{selectedArtwork.title}</h2>
+              <p>{formatArtist(selectedArtwork.artist_display)}</p>
+              <p className="muted">{selectedArtwork.date_display || selectedArtwork.date_start}</p>
+            </div>
+          </section>
+        </div>
       )}
     </main>
   );

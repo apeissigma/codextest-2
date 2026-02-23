@@ -16,7 +16,6 @@ body {
 }
 
 .page-shell {
-  max-width: 1280px;
   margin: 0 auto;
   padding: 1.5rem;
 }
@@ -104,6 +103,13 @@ body {
 }
 
 .art-card {
+  appearance: none;
+  width: 100%;
+  padding: 0;
+  text-align: left;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
   border: 3px solid #000000;
   background: #ffffff;
   transition: transform 120ms ease;
@@ -155,6 +161,68 @@ body {
   color: #ffffff;
 }
 
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.8);
+}
+
+.art-modal {
+  position: relative;
+  max-width: 760px;
+  width: min(100%, 760px);
+  max-height: calc(100vh - 2rem);
+  overflow: auto;
+  border: 3px solid #000000;
+  background: #ffffff;
+}
+
+.art-modal img {
+  width: 100%;
+  max-height: 70vh;
+  object-fit: contain;
+  display: block;
+  border-bottom: 3px solid #000000;
+}
+
+.modal-meta {
+  padding: 1rem;
+}
+
+.modal-meta h2 {
+  margin: 0;
+  font-size: clamp(1.3rem, 3vw, 2rem);
+  text-transform: uppercase;
+}
+
+.modal-meta p {
+  margin: 0.55rem 0 0;
+}
+
+.close-button {
+  appearance: none;
+  position: absolute;
+  top: 0.4rem;
+  right: 0.4rem;
+  width: 2rem;
+  height: 2rem;
+  border: 2px solid #000000;
+  background: #ffffff;
+  color: #000000;
+  font-size: 1.4rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.close-button:hover {
+  background: #000000;
+  color: #ffffff;
+}
+
 @media (max-width: 640px) {
   .page-shell {
     padding: 1rem;
@@ -163,7 +231,8 @@ body {
   .hero,
   .timeline-panel,
   .art-card,
-  .status {
+  .status,
+  .art-modal {
     border-width: 2px;
   }
 
